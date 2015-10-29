@@ -2,13 +2,15 @@
 #include<stdlib.h>
 
 //struct dos elementos
-typedef struct{
+struct estruturaElemento{
 	int valor;
 	struct estruturaElemento *proximo;
-}elemento;
+};
+
+typedef struct estruturaElemento elemento;
 
 //struct do vetor de controle (estrutura auxiliar que irá conter o fator de carga e o número de elementos de cada conjunto)
-typedef struct{
+typedef struct{ //foi usado typedef pra facilitar criar diretamente um vetor desse tipo de estrutura
 	int numeroCelulas;
 	int numeroElementos;
 	int fatorCarga;
@@ -32,7 +34,7 @@ elemento* conjuntos[50]; //vetor estático de ponteiros para os conjuntos (cada 
 //funções extras
 void inicializa(); //inicializa o vetor de conjuntos, fazendo suas células apontarem para NULL (a cada vez que é criado um conjunto, a célula referente a ID do conjunto irá apontar para seu primeiro elemento)
 void menu();
-//int hash(int elemento);
+int hash(int numero);
 
 int main(){
 	inicializa();
@@ -57,7 +59,8 @@ void menu(){
 		switch(escolha){
 			case 1:
 				id = criar();
-				printf("Conjunto %d criado!\n\n", id);
+				if(id != -1) printf("Conjunto %d criado!\n\n", id);
+				else printf("Impossivel criar novo conjunto!\n");
 				break;
 			case 2:
 				printf("Qual elemento a ser inserido? ");
@@ -109,19 +112,28 @@ void inicializa(){
 	}
 }
 
-int criar(){ //aloca dinâmicamente cada conjunto (que tem tamanho inicial 50) - cada conjunto é um vetor de ponteiros para listas encadeadas que serão os elementos
-	int i;
-	elemento* conjunto; //conjunto de elementos que será alocado dinâmicamente - em primeira instância, o tamanho será 50 elementos
-	for(i=0; i<50; i++){
-		conjunto = malloc(sizeof(elemento));
-		conjunto[i].proximo = NULL; //inicializa todas as células apontando para NULL (sem elementos inseridos) - o elemento que está dentro de cada célula NÃO tem valor (funciona como a "cabeça" da lista encadeada, apenas apontando para o primeiro elemento)
+int criar(){ //aloca dinâmicamente cada conjunto (que tem tamanho inicial 50) - cada conjunto é um vetor de ponteiros para listas encadeadas que serão os elementos (com o elemento da própria célula sem valor, apenas apontando para o primeiro elemento)
+	if(contadorConjuntos < 50){ //certifica que só podem ser criados 50 conjuntos
+		int i;
+		elemento* conjunto; //conjunto de elementos que será alocado dinâmicamente - em primeira instância, o tamanho será 50 elementos
+		conjunto = malloc(50*sizeof(elemento));
+		for(i=0; i<50; i++){
+			conjunto[i].proximo = NULL; //inicializa todas as células apontando para NULL (sem elementos inseridos) - o elemento que está dentro de cada célula NÃO tem valor (funciona como a "cabeça" da lista encadeada, apenas apontando para o primeiro elemento)
+		}
+		conjuntos[contadorConjuntos] = &conjunto[0]; //faz o vetor de conjuntos apontar para a primeira célula desse conjunto
+		vetorControle[contadorConjuntos].numeroCelulas = 50; //atualiza os valores de controle do conjunto
+		vetorControle[contadorConjuntos].numeroElementos = 0;
+		vetorControle[contadorConjuntos].fatorCarga = 0;
+		contadorConjuntos++;
+		return contadorConjuntos-1; //numero referente a ID do conjunto que acaba de ser criado
 	}
-	conjuntos[contadorConjuntos] = &conjunto[0]; //faz o vetor de conjuntos apontar para a primeira célula desse conjunto
-	vetorControle[contadorConjuntos].numeroCelulas = 50;
-	vetorControle[contadorConjuntos].numeroElementos = 0;
-	vetorControle[contadorConjuntos].fatorCarga = 0;
-	contadorConjuntos++;
-	return contadorConjuntos-1;
+	else{
+		return -1;
+	}
+}
+
+int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento a ser inserido#000000#FFFFFF
+	return numero%ncelulas;
 }
 
 int inserir(int element, int set){
