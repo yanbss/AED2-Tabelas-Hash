@@ -63,10 +63,8 @@ void menu(){
 				else printf("Impossivel criar novo conjunto!\n");
 				break;
 			case 2:
-				printf("Qual elemento a ser inserido? ");
-				scanf("%d", &element);
-				printf("\nEm qual conjunto? ");
-				scanf("%d", &conjunto);
+				printf("Qual elemento a ser inserido em qual conjunto? ");
+				scanf("%d %d", &element, &conjunto);
 				retorno = inserir(element, conjunto);
 				if(retorno == 1) printf("Sucesso!\n");
 				if(retorno == -1) printf("Erro!\n");
@@ -77,6 +75,8 @@ void menu(){
 				printf("\nEm qual conjunto? ");
 				scanf("%d", &conjunto);
 				retorno = existe(element, conjunto);
+				if(retorno == 1) printf("Elemento existe no conjunto!\n");
+				if(retorno == -1) printf("Erro!\n");
 				break;
 			case 4:
 				printf("Qual elemento a ser removido? ");
@@ -116,11 +116,11 @@ int criar(){ //aloca dinâmicamente cada conjunto (que tem tamanho inicial 50) -
 	if(contadorConjuntos < 50){ //certifica que só podem ser criados 50 conjuntos
 		int i;
 		elemento* conjunto; //conjunto de elementos que será alocado dinâmicamente - em primeira instância, o tamanho será 50 elementos
-		conjunto = malloc(50*sizeof(elemento));
+		conjunto = (elemento*) malloc(50*sizeof(elemento)); //aloca o vetor de 50 elementos (pode mudar após rehash)
+		conjuntos[contadorConjuntos] = conjunto; //faz o vetor de conjuntos apontar para a primeira célula desse conjunto
 		for(i=0; i<50; i++){
-			conjunto[i].proximo = NULL; //inicializa todas as células apontando para NULL (sem elementos inseridos) - o elemento que está dentro de cada célula NÃO tem valor (funciona como a "cabeça" da lista encadeada, apenas apontando para o primeiro elemento)
+			(conjunto+i)->proximo = NULL; //inicializa todas as células apontando para NULL (sem elementos inseridos) - o elemento que está dentro de cada célula NÃO tem valor (funciona como a "cabeça" da lista encadeada, apenas apontando para o primeiro elemento)
 		}
-		conjuntos[contadorConjuntos] = &conjunto[0]; //faz o vetor de conjuntos apontar para a primeira célula desse conjunto
 		vetorControle[contadorConjuntos].numeroCelulas = 50; //atualiza os valores de controle do conjunto
 		vetorControle[contadorConjuntos].numeroElementos = 0;
 		vetorControle[contadorConjuntos].fatorCarga = 0;
@@ -144,20 +144,36 @@ int inserir(int element, int set){
 		novo->proximo = NULL;
 		ncelulas = vetorControle[set].numeroCelulas;
 		index = hash(element, ncelulas);
-		ponteiro = conjuntos[set] + (index*sizeof(elemento));
+		ponteiro = conjuntos[set] + index;
 		if(ponteiro->proximo == NULL) ponteiro->proximo = novo; //inserção de primeiro elemento da célula [index]
 		else{
-			while(ponteiro->proximo != NULL) ponteiro = ponteiro->proximo; //caso não seja o primeiro, percorre a lista e insere no final
-			ponteiro->proximo = novo;
+			novo->proximo = ponteiro->proximo; //insere na primeira posição
+			ponteiro->proximo = novo; //rearranja os ponteiros para que o que estava na primeira posição, passe para a próxima
 		}
 		free(ponteiro);
+		vetorControle[set].numeroElementos++;
 		return 1;
 	}
 	else return -1; //caso o conjunto que se deseja inserir não exista
 }
 
 int existe(int element, int set){
-	return 1;
+	if(set < contadorConjuntos){ //certifica que o conjunto a ser procurado já existe
+		int index, ncelulas;
+		elemento *ponteiro;
+		ncelulas = vetorControle[set].numeroCelulas;
+		index = hash(element, ncelulas);
+		ponteiro = conjuntos[set] + index;
+		if (ponteiro->proximo == NULL) return -1; //não existe nenhum valor nessa lista
+		else{
+			while(ponteiro->proximo != NULL){ //percorre a lista
+				ponteiro = ponteiro->proximo;
+				if(ponteiro->valor == element) return 1; //se achar o valor, retorna 1
+			}
+			return -1; //se percorrer toda lista e não achar o valor, retorna -1
+		}
+	}
+	else return -1;
 }
 
 int excluir(int element, int set){
@@ -169,6 +185,15 @@ int unir(int conjunto1, int conjunto2){
 }
 
 void listar(int set){
+	int i;
+	elemento* ponteiro;
+	for(i = 0; i<vetorControle[set].numeroCelulas; i++){
+		ponteiro = conjuntos[set] + i;
+		while(ponteiro->proximo != NULL){
+			ponteiro = ponteiro->proximo;
+			printf("%d, \n", ponteiro->valor);
+		}
+	}
 }
 
 void fim(){
