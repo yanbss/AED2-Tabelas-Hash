@@ -34,7 +34,7 @@ elemento* conjuntos[50]; //vetor estático de ponteiros para os conjuntos (cada 
 //funções extras
 void inicializa(); //inicializa o vetor de conjuntos, fazendo suas células apontarem para NULL (a cada vez que é criado um conjunto, a célula referente a ID do conjunto irá apontar para seu primeiro elemento)
 void menu();
-int hash(int numero);
+int hash(int numero, int ncelulas); //função hash
 
 int main(){
 	inicializa();
@@ -127,17 +127,33 @@ int criar(){ //aloca dinâmicamente cada conjunto (que tem tamanho inicial 50) -
 		contadorConjuntos++;
 		return contadorConjuntos-1; //numero referente a ID do conjunto que acaba de ser criado
 	}
-	else{
-		return -1;
-	}
+	else return -1;
 }
 
-int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento a ser inserido#000000#FFFFFF
+int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento a ser inserido
 	return numero%ncelulas;
 }
 
 int inserir(int element, int set){
-	return 1;
+	if(set < contadorConjuntos){ //certifica que está tentando inserir num conjunto que já existe
+		int index, ncelulas;
+		elemento *ponteiro; //ponteiro que irá apontar para a célula correta referente ao indice gerado pela função hash (dela sai uma lista encadeada com os valores)
+		elemento *novo; //novo elemento que será inserido
+		novo = malloc(sizeof(novo));
+		novo->valor = element;
+		novo->proximo = NULL;
+		ncelulas = vetorControle[set].numeroCelulas;
+		index = hash(element, ncelulas);
+		ponteiro = conjuntos[set] + (index*sizeof(elemento));
+		if(ponteiro->proximo == NULL) ponteiro->proximo = novo; //inserção de primeiro elemento da célula [index]
+		else{
+			while(ponteiro->proximo != NULL) ponteiro = ponteiro->proximo; //caso não seja o primeiro, percorre a lista e insere no final
+			ponteiro->proximo = novo;
+		}
+		free(ponteiro);
+		return 1;
+	}
+	else return -1; //caso o conjunto que se deseja inserir não exista
 }
 
 int existe(int element, int set){
