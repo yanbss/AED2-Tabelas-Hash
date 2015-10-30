@@ -139,7 +139,7 @@ int inserir(int element, int set){
 		int index, ncelulas;
 		elemento *ponteiro; //ponteiro que irá apontar para a célula correta referente ao indice gerado pela função hash (dela sai uma lista encadeada com os valores)
 		elemento *novo; //novo elemento que será inserido
-		novo = malloc(sizeof(novo));
+		novo = malloc(sizeof(elemento));
 		novo->valor = element;
 		novo->proximo = NULL;
 		ncelulas = vetorControle[set].numeroCelulas;
