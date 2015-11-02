@@ -35,6 +35,8 @@ elemento* conjuntos[50]; //vetor estático de ponteiros para os conjuntos (cada 
 void inicializa(); //inicializa o vetor de conjuntos, fazendo suas células apontarem para NULL (a cada vez que é criado um conjunto, a célula referente a ID do conjunto irá apontar para seu primeiro elemento)
 void menu();
 int hash(int numero, int ncelulas); //função hash
+//void mergeSort(int n, int* vetor); //algoritmo de ordenação do vetor para listagem
+int compareInt(const void * a, const void * b); //função auxiliar usada pelo qsort(), função incluida na biblioteca stdlib que opera o quicksort em cima do vetor
 
 int main(){
 	inicializa();
@@ -45,7 +47,7 @@ int main(){
 void menu(){
 	int escolha, element, conjunto, id, retorno, conjunto1, conjunto2;
 	while(escolha != 7){
-		printf("############################################\n");
+		printf("\n############################################\n");
 		printf("\t1 - Criar novo conjunto\n");
 		printf("\t2 - Inserir novo elemento em conjunto\n");
 		printf("\t3 - Conferir se existe elemento em conjunto\n");
@@ -131,7 +133,7 @@ int criar(){ //aloca dinâmicamente cada conjunto (que tem tamanho inicial 50) -
 }
 
 int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento a ser inserido
-	return numero%ncelulas;
+	return abs(numero%ncelulas);
 }
 
 int inserir(int element, int set){
@@ -150,7 +152,6 @@ int inserir(int element, int set){
 			novo->proximo = ponteiro->proximo; //insere na primeira posição
 			ponteiro->proximo = novo; //rearranja os ponteiros para que o que estava na primeira posição, passe para a próxima
 		}
-		free(ponteiro);
 		vetorControle[set].numeroElementos++;
 		return 1;
 	}
@@ -173,11 +174,29 @@ int existe(int element, int set){
 			return -1; //se percorrer toda lista e não achar o valor, retorna -1
 		}
 	}
-	else return -1;
+	else return -1; //conjunto a ser procurado não existe
 }
 
 int excluir(int element, int set){
-	return 1;
+	if(set < contadorConjuntos){ //certifica que o conjunto do qual será eliminado o elemento existe
+		if(existe(element, set) == -1) return -1; //caso esteja tentando eliminar um elemento que não existe no conjunto
+		else{ //caso realmente exista no conjunto:
+			int index, ncelulas;
+			elemento *ponteiro, *anterior;
+			ncelulas = vetorControle[set].numeroCelulas;
+			index = hash(element, ncelulas);
+			anterior = conjuntos[set] + index;
+			ponteiro = anterior->proximo;
+			while(ponteiro->valor != element){
+				ponteiro = ponteiro->proximo;
+				anterior = anterior->proximo;
+			}
+			anterior->proximo = ponteiro->proximo;
+			free(ponteiro);
+			vetorControle[set].numeroElementos--;
+		}
+	}
+	else return 1; //se o conjunto não existir, não deve retornar erro
 }
 
 int unir(int conjunto1, int conjunto2){
@@ -185,15 +204,72 @@ int unir(int conjunto1, int conjunto2){
 }
 
 void listar(int set){
-	int i;
+	int i, cont=0, nelementos;
 	elemento* ponteiro;
-	for(i = 0; i<vetorControle[set].numeroCelulas; i++){
+	int *vetor; //cria um vetor de inteiros alocado dinâmicamente com o número de elementos do conjunto (será passado para uma função de ordenação)
+	nelementos = vetorControle[set].numeroElementos;
+	vetor = (int*) malloc(nelementos * sizeof(int));
+	for(i = 0; i < vetorControle[set].numeroCelulas; i++){
 		ponteiro = conjuntos[set] + i;
 		while(ponteiro->proximo != NULL){
 			ponteiro = ponteiro->proximo;
-			printf("%d, \n", ponteiro->valor);
+			vetor[cont] = (ponteiro->valor);
+			cont++;
 		}
 	}
+	cont=0;
+	qsort(vetor, nelementos, sizeof(int), compareInt);
+	for(i = 0; i < nelementos-1; i++){ //vai até o penúltimo elemento para que o último possa ser impresso sem a vírgula no final
+		printf("%d,", vetor[i]);
+	}
+	printf("%d", vetor[i]);
+}
+
+/*void mergeSort(int n, int* vetor){
+	int aux, media, i, j, k;
+	int *auxiliar1, *auxiliar2; //vetores auxiliares alocados dinamicamente
+	if(n == 2){ //só tem 2 elementos no vetor
+		if(vetor[0] > vetor[1]){
+			aux = vetor[0];
+			vetor[0] = vetor[1];
+			vetor[1] = aux;
+		}
+	}
+	else{
+		if(n > 2){ //tem mais que 2 elementos
+			media = n/2;
+			auxiliar1 = (int*) malloc(media*sizeof(int));
+			auxiliar2 = (int*) malloc((n-media)*sizeof(int));
+			for(i = 0; i < media; i++){
+				auxiliar1[i] = vetor[i];
+			}
+			for(i = media; i < n; i++){
+				auxiliar2[i-media] = vetor[i];
+			}
+			mergeSort(media, auxiliar1);
+			mergeSort(n-media, auxiliar2);
+			i = 0;
+			j = 0;
+			for(k = 0; k < n; k++){
+				if(auxiliar1[i] <= auxiliar2[j]){
+					vetor[k] = auxiliar1[i];
+					i++;
+				}
+				else{
+					vetor[k] = auxiliar2[j];
+					j++;
+				}
+			}
+			free(auxiliar1);
+			free(auxiliar2);
+		}
+	}
+}*/
+
+int compareInt(const void * a, const void * b){
+	if( *(int*)a < *(int*)b ) return -1;
+	if( *(int*)a == *(int*)b ) return 0;
+	if( *(int*)a > *(int*)b ) return 1;
 }
 
 void fim(){
