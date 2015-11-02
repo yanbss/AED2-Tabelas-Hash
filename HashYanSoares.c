@@ -36,7 +36,8 @@ void inicializa(); //inicializa o vetor de conjuntos, fazendo suas células apon
 void menu();
 int hash(int numero, int ncelulas); //função hash
 //void mergeSort(int n, int* vetor); //algoritmo de ordenação do vetor para listagem
-int compareInt(const void * a, const void * b); //função auxiliar usada pelo qsort(), função incluida na biblioteca stdlib que opera o quicksort em cima do vetor
+int compareInt(const void * a, const void * b); //função auxiliar usada pelo qsort(), função incluida na biblioteca stdlib que opera o quicksort em cima do vetor4
+void rehash(int set);
 
 int main(){
 	inicializa();
@@ -92,6 +93,7 @@ void menu(){
 				scanf("%d", &conjunto1);
 				scanf("%d", &conjunto2);
 				retorno = unir(conjunto1, conjunto2);
+				printf("Conjunto %d criado!\n", retorno);
 				break;
 			case 6:
 				printf("Qual conjunto a ser listado? ");
@@ -199,8 +201,45 @@ int excluir(int element, int set){
 	else return 1; //se o conjunto não existir, não deve retornar erro
 }
 
-int unir(int conjunto1, int conjunto2){
-	return 1;
+int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um novo conjunto, armazenar os elementos dos 2 conjuntos em um vetor e inserir eles no novo conjunto
+	elemento *ponteiro;
+	int *vetor;
+	int nelementos, cont=0, i, idconjunto;
+	
+	//calculo do numero de elementos, numero de celulas e fator de carga:
+	
+	nelementos = vetorControle[conjunto1].numeroElementos + vetorControle[conjunto2].numeroElementos;
+	
+	//criação do novo conjunto:
+	
+	idconjunto = criar();
+	
+	//criação do vetor dinamicamente alocado e inserção de todos os elementos dos dois conjuntos nele:
+	
+	vetor = (int*) malloc (nelementos * sizeof(int)); //aloca o espaço necessário para inserir todos os elementos dos 2 conjuntos no vetor
+	for(i = 0; i < vetorControle[conjunto1].numeroCelulas; i++){ //insere no vetor os elementos do primeiro conjunto
+		ponteiro = conjuntos[conjunto1] + i;
+		while(ponteiro->proximo != NULL){
+			ponteiro = ponteiro->proximo;
+			vetor[cont] = (ponteiro->valor);
+			cont++;
+		}
+	}
+	for(i = 0; i < vetorControle[conjunto2].numeroCelulas; i++){ //insere no vetor os elementos do segundo conjunto
+		ponteiro = conjuntos[conjunto2] + i;
+		while(ponteiro->proximo != NULL){
+			ponteiro = ponteiro->proximo;
+			vetor[cont] = (ponteiro->valor);
+			cont++;
+		}
+	}
+	
+	//inserção dos elementos no novo conjunto:
+	
+	for(i=0; i<nelementos; i++){ //insere cada um dos elementos no novo conjunto
+		inserir(vetor[i], idconjunto);
+	}
+	return idconjunto; //retorna o id do novo conjunto criado
 }
 
 void listar(int set){
@@ -217,7 +256,6 @@ void listar(int set){
 			cont++;
 		}
 	}
-	cont=0;
 	qsort(vetor, nelementos, sizeof(int), compareInt);
 	for(i = 0; i < nelementos-1; i++){ //vai até o penúltimo elemento para que o último possa ser impresso sem a vírgula no final
 		printf("%d,", vetor[i]);
@@ -273,4 +311,14 @@ int compareInt(const void * a, const void * b){
 }
 
 void fim(){
+	int i, j;
+	for(i=0; i<contadorConjuntos; i++){
+		for(j=0; j<vetorControle[i].numeroCelulas; j++){
+			free(conjuntos[i]+j);
+		}
+	}
+	exit(0);
+}
+
+void rehash(int set){
 }
