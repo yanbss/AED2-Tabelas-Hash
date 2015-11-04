@@ -13,7 +13,7 @@ typedef struct estruturaElemento elemento;
 typedef struct{ //foi usado typedef pra facilitar criar diretamente um vetor desse tipo de estrutura
 	int numeroCelulas;
 	int numeroElementos;
-	int fatorCarga;
+	float fatorCarga;
 }controle;
 
 controle vetorControle[50];
@@ -35,7 +35,6 @@ elemento* conjuntos[50]; //vetor estático de ponteiros para os conjuntos (cada 
 void inicializa(); //inicializa o vetor de conjuntos, fazendo suas células apontarem para NULL (a cada vez que é criado um conjunto, a célula referente a ID do conjunto irá apontar para seu primeiro elemento)
 void menu();
 int hash(int numero, int ncelulas); //função hash
-//void mergeSort(int n, int* vetor); //algoritmo de ordenação do vetor para listagem
 int compareInt(const void * a, const void * b); //função auxiliar usada pelo qsort(), função incluida na biblioteca stdlib que opera o quicksort em cima do vetor4
 void rehash(int set);
 
@@ -155,6 +154,10 @@ int inserir(int element, int set){
 			ponteiro->proximo = novo; //rearranja os ponteiros para que o que estava na primeira posição, passe para a próxima
 		}
 		vetorControle[set].numeroElementos++;
+		vetorControle[set].fatorCarga = (float) vetorControle[set].numeroElementos / vetorControle[set].numeroCelulas;
+		if(vetorControle[set].fatorCarga >= 0.7){
+			rehash(set);
+		}
 		return 1;
 	}
 	else return -1; //caso o conjunto que se deseja inserir não exista
@@ -206,15 +209,15 @@ int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um 
 	int *vetor;
 	int nelementos, cont=0, i, idconjunto;
 	
-	//calculo do numero de elementos, numero de celulas e fator de carga:
+	//calculo do numero de elementos
 	
 	nelementos = vetorControle[conjunto1].numeroElementos + vetorControle[conjunto2].numeroElementos;
 	
-	//criação do novo conjunto:
+	//criação do novo conjunto
 	
 	idconjunto = criar();
 	
-	//criação do vetor dinamicamente alocado e inserção de todos os elementos dos dois conjuntos nele:
+	//criação do vetor dinamicamente alocado e inserção de todos os elementos dos dois conjuntos nele
 	
 	vetor = (int*) malloc (nelementos * sizeof(int)); //aloca o espaço necessário para inserir todos os elementos dos 2 conjuntos no vetor
 	for(i = 0; i < vetorControle[conjunto1].numeroCelulas; i++){ //insere no vetor os elementos do primeiro conjunto
@@ -234,7 +237,7 @@ int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um 
 		}
 	}
 	
-	//inserção dos elementos no novo conjunto:
+	//inserção dos elementos no novo conjunto
 	
 	for(i=0; i<nelementos; i++){ //insere cada um dos elementos no novo conjunto
 		inserir(vetor[i], idconjunto);
@@ -263,47 +266,6 @@ void listar(int set){
 	printf("%d", vetor[i]);
 }
 
-/*void mergeSort(int n, int* vetor){
-	int aux, media, i, j, k;
-	int *auxiliar1, *auxiliar2; //vetores auxiliares alocados dinamicamente
-	if(n == 2){ //só tem 2 elementos no vetor
-		if(vetor[0] > vetor[1]){
-			aux = vetor[0];
-			vetor[0] = vetor[1];
-			vetor[1] = aux;
-		}
-	}
-	else{
-		if(n > 2){ //tem mais que 2 elementos
-			media = n/2;
-			auxiliar1 = (int*) malloc(media*sizeof(int));
-			auxiliar2 = (int*) malloc((n-media)*sizeof(int));
-			for(i = 0; i < media; i++){
-				auxiliar1[i] = vetor[i];
-			}
-			for(i = media; i < n; i++){
-				auxiliar2[i-media] = vetor[i];
-			}
-			mergeSort(media, auxiliar1);
-			mergeSort(n-media, auxiliar2);
-			i = 0;
-			j = 0;
-			for(k = 0; k < n; k++){
-				if(auxiliar1[i] <= auxiliar2[j]){
-					vetor[k] = auxiliar1[i];
-					i++;
-				}
-				else{
-					vetor[k] = auxiliar2[j];
-					j++;
-				}
-			}
-			free(auxiliar1);
-			free(auxiliar2);
-		}
-	}
-}*/
-
 int compareInt(const void * a, const void * b){
 	if( *(int*)a < *(int*)b ) return -1;
 	if( *(int*)a == *(int*)b ) return 0;
@@ -313,6 +275,7 @@ int compareInt(const void * a, const void * b){
 void fim(){
 	int i, j;
 	for(i=0; i<contadorConjuntos; i++){
+		
 		for(j=0; j<vetorControle[i].numeroCelulas; j++){
 			free(conjuntos[i]+j);
 		}
@@ -320,5 +283,45 @@ void fim(){
 	exit(0);
 }
 
-void rehash(int set){
+void rehash(int set){ //vai dobrar o numero de celulas da tabela e irá inserir novamente todos os seus elementos
+	elemento *ponteiro, *conjunto;
+	int *vetor;
+	int i, cont=0;
+
+	//primeiramente, pega todos os elementos do conjunto e os armazena em um vetor
+	
+	vetor = (int*) malloc(vetorControle[set].numeroElementos * sizeof(int));
+	for(i = 0; i < vetorControle[set].numeroCelulas; i++){ //insere no vetor os elementos do primeiro conjunto
+		ponteiro = conjuntos[set] + i;
+		while(ponteiro->proximo != NULL){
+			ponteiro = ponteiro->proximo;
+			vetor[cont] = (ponteiro->valor);
+			cont++;
+		}
+	}
+	
+	//desaloca toda a tabela hash para criar a nova
+	
+	for(i = 0; i < cont; i++){
+		excluir(vetor[i], set);
+	}
+	for(i = (vetorControle[set].numeroCelulas-1); i >= 0; i--){ //desaloca toda a tabela hash do último elemento até o primeiro (para não perder a referência do conjuntos[set] que é o primeiro elemento)
+		ponteiro = conjuntos[set] + i;
+		free(ponteiro);
+	}
+	free(conjuntos[set]);
+	
+	//cria a nova tabela com o dobro de tamanho
+	
+	vetorControle[set].numeroCelulas = vetorControle[set].numeroCelulas * 2; //duplica o tamanho da tabela
+	vetorControle[set].numeroElementos = 0;
+	vetorControle[set].fatorCarga = 0;
+	conjunto = (elemento*) malloc(vetorControle[set].numeroCelulas * sizeof(elemento));
+	conjuntos[set] = conjunto; //faz o vetor de conjuntos apontar para a nova tabela, com o dobro de tamanho
+	for(i=0; i<vetorControle[set].numeroCelulas; i++){
+		(conjunto+i)->proximo = NULL; //inicializa a nova tabela hash fazendo todas as células apontarem para NULL
+	}
+	for(i=0; i<cont; i++){
+		inserir(vetor[i], set);
+	}
 }
