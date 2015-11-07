@@ -33,76 +33,33 @@ elemento* conjuntos[50]; //vetor estático de ponteiros para os conjuntos (cada 
 
 //funções extras
 void inicializa(); //inicializa o vetor de conjuntos, fazendo suas células apontarem para NULL (a cada vez que é criado um conjunto, a célula referente a ID do conjunto irá apontar para seu primeiro elemento)
-void menu();
 int hash(int numero, int ncelulas); //função hash
 int compareInt(const void * a, const void * b); //função auxiliar usada pelo qsort(), função incluida na biblioteca stdlib que opera o quicksort em cima do vetor4
-void rehash(int set);
+void rehash(int set); //função responsável pelo rehash, quando atinge o fator de carga máximo
+void eliminaTodos(int set); //função que elimina todos os elementos de um conjunto, para facilitar a implementação do fim()
 
 int main(){
+	int r;
 	inicializa();
-	menu();
+	r = criar();
+	printf("%d\n", r);
+	r = inserir(10,0);
+	printf("%d\n", r);
+	r = inserir(20,0);
+	printf("%d\n", r);
+	r = excluir(10,0);
+	printf("%d\n", r);
+	r = existe(10,0);
+	printf("%d\n", r);
+	r = criar();
+	printf("%d\n", r);
+	r = inserir(30,1);
+	printf("%d\n", r);
+	r = unir(0,1);
+	printf("%d\n", r);
+	listar(2);
+	fim();
 	return 0;
-}
-
-void menu(){
-	int escolha, element, conjunto, id, retorno, conjunto1, conjunto2;
-	while(escolha != 7){
-		printf("\n############################################\n");
-		printf("\t1 - Criar novo conjunto\n");
-		printf("\t2 - Inserir novo elemento em conjunto\n");
-		printf("\t3 - Conferir se existe elemento em conjunto\n");
-		printf("\t4 - Excluir elemento de conjunto\n");
-		printf("\t5 - Unir conjuntos\n");
-		printf("\t6 - Listar conjunto\n");
-		printf("\t7 - Encerrar programa\n");
-		printf("############################################\n");
-		printf("\nInsira sua opcao: ");
-		scanf("%d", &escolha);
-		switch(escolha){
-			case 1:
-				id = criar();
-				if(id != -1) printf("Conjunto %d criado!\n\n", id);
-				else printf("Impossivel criar novo conjunto!\n");
-				break;
-			case 2:
-				printf("Qual elemento a ser inserido em qual conjunto? ");
-				scanf("%d %d", &element, &conjunto);
-				retorno = inserir(element, conjunto);
-				if(retorno == 1) printf("Sucesso!\n");
-				if(retorno == -1) printf("Erro!\n");
-				break;
-			case 3:
-				printf("Qual elemento a ser conferido? ");
-				scanf("%d", &element);
-				printf("\nEm qual conjunto? ");
-				scanf("%d", &conjunto);
-				retorno = existe(element, conjunto);
-				if(retorno == 1) printf("Elemento existe no conjunto!\n");
-				if(retorno == -1) printf("Erro!\n");
-				break;
-			case 4:
-				printf("Qual elemento a ser removido? ");
-				scanf("%d", &element);
-				printf("\nEm qual conjunto? ");
-				scanf("%d", &conjunto);
-				retorno = excluir(element, conjunto);
-				break;
-			case 5:
-				printf("Quais conjuntos a serem unidos? ");
-				scanf("%d", &conjunto1);
-				scanf("%d", &conjunto2);
-				retorno = unir(conjunto1, conjunto2);
-				printf("Conjunto %d criado!\n", retorno);
-				break;
-			case 6:
-				printf("Qual conjunto a ser listado? ");
-				scanf("%d", &conjunto);
-				listar(conjunto);
-				break;
-			case 7:
-				break;
-		}
-	}
 }
 
 void inicializa(){
@@ -138,6 +95,8 @@ int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento 
 }
 
 int inserir(int element, int set){
+	if(existe(element, set) == 1) return 1; //não deve conter elementos repetidos e, ao fazer isso, não deve acusar erro (então retorna 1)
+	
 	if(set < contadorConjuntos){ //certifica que está tentando inserir num conjunto que já existe
 		int index, ncelulas;
 		elemento *ponteiro; //ponteiro que irá apontar para a célula correta referente ao indice gerado pela função hash (dela sai uma lista encadeada com os valores)
@@ -160,6 +119,7 @@ int inserir(int element, int set){
 		}
 		return 1;
 	}
+	
 	else return -1; //caso o conjunto que se deseja inserir não exista
 }
 
@@ -199,6 +159,7 @@ int excluir(int element, int set){
 			anterior->proximo = ponteiro->proximo;
 			free(ponteiro);
 			vetorControle[set].numeroElementos--;
+			return 1;
 		}
 	}
 	else return 1; //se o conjunto não existir, não deve retornar erro
@@ -218,7 +179,6 @@ int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um 
 	idconjunto = criar();
 	
 	//criação do vetor dinamicamente alocado e inserção de todos os elementos dos dois conjuntos nele
-	
 	vetor = (int*) malloc (nelementos * sizeof(int)); //aloca o espaço necessário para inserir todos os elementos dos 2 conjuntos no vetor
 	for(i = 0; i < vetorControle[conjunto1].numeroCelulas; i++){ //insere no vetor os elementos do primeiro conjunto
 		ponteiro = conjuntos[conjunto1] + i;
@@ -238,14 +198,14 @@ int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um 
 	}
 	
 	//inserção dos elementos no novo conjunto
-	
-	for(i=0; i<nelementos; i++){ //insere cada um dos elementos no novo conjunto
+	for(i=0; i<cont; i++){ //insere cada um dos elementos no novo conjunto
 		inserir(vetor[i], idconjunto);
 	}
 	return idconjunto; //retorna o id do novo conjunto criado
 }
 
 void listar(int set){
+	if(vetorControle[set].numeroElementos == 0) return;
 	int i, cont=0, nelementos;
 	elemento* ponteiro;
 	int *vetor; //cria um vetor de inteiros alocado dinâmicamente com o número de elementos do conjunto (será passado para uma função de ordenação)
@@ -263,7 +223,7 @@ void listar(int set){
 	for(i = 0; i < nelementos-1; i++){ //vai até o penúltimo elemento para que o último possa ser impresso sem a vírgula no final
 		printf("%d,", vetor[i]);
 	}
-	printf("%d", vetor[i]);
+	printf("%d\n", vetor[i]);
 }
 
 int compareInt(const void * a, const void * b){
@@ -274,10 +234,12 @@ int compareInt(const void * a, const void * b){
 
 void fim(){
 	int i, j;
-	for(i=0; i<contadorConjuntos; i++){
-		
-		for(j=0; j<vetorControle[i].numeroCelulas; j++){
-			free(conjuntos[i]+j);
+	elemento *ponteiro;
+	for(i=0; i < contadorConjuntos; i++){
+		eliminaTodos(i); //desaloca todos os elementos que foram inseridos no conjunto
+		for(j = (vetorControle[i].numeroCelulas-1); j >= 0; j--){ //desaloca todas as células do conjunto
+			ponteiro = conjuntos[i] + j;
+			free(ponteiro);
 		}
 	}
 	exit(0);
@@ -287,9 +249,9 @@ void rehash(int set){ //vai dobrar o numero de celulas da tabela e irá inserir 
 	elemento *ponteiro, *conjunto;
 	int *vetor;
 	int i, cont=0;
-
-	//primeiramente, pega todos os elementos do conjunto e os armazena em um vetor
 	
+	//primeiramente, pega todos os elementos do conjunto e os armazena em um vetor
+
 	vetor = (int*) malloc(vetorControle[set].numeroElementos * sizeof(int));
 	for(i = 0; i < vetorControle[set].numeroCelulas; i++){ //insere no vetor os elementos do primeiro conjunto
 		ponteiro = conjuntos[set] + i;
@@ -309,7 +271,6 @@ void rehash(int set){ //vai dobrar o numero de celulas da tabela e irá inserir 
 		ponteiro = conjuntos[set] + i;
 		free(ponteiro);
 	}
-	free(conjuntos[set]);
 	
 	//cria a nova tabela com o dobro de tamanho
 	
@@ -323,5 +284,23 @@ void rehash(int set){ //vai dobrar o numero de celulas da tabela e irá inserir 
 	}
 	for(i=0; i<cont; i++){
 		inserir(vetor[i], set);
+	}
+}
+
+void eliminaTodos(int set){
+	elemento *ponteiro;
+	int *vetor;
+	int i, cont=0;
+	vetor = (int*) malloc(vetorControle[set].numeroElementos * sizeof(int)); //armazena todos os elementos em um vetor
+	for(i = 0; i < vetorControle[set].numeroCelulas; i++){
+		ponteiro = conjuntos[set] + i;
+		while(ponteiro->proximo != NULL){
+			ponteiro = ponteiro->proximo;
+			vetor[cont] = (ponteiro->valor);
+			cont++;
+		}
+	}
+	for(i = 0; i < cont; i++){ //exclui todos os elementos
+		excluir(vetor[i], set);
 	}
 }
