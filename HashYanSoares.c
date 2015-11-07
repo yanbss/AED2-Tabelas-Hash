@@ -39,26 +39,7 @@ void rehash(int set); //função responsável pelo rehash, quando atinge o fator
 void eliminaTodos(int set); //função que elimina todos os elementos de um conjunto, para facilitar a implementação do fim()
 
 int main(){
-	int r;
 	inicializa();
-	r = criar();
-	printf("%d\n", r);
-	r = inserir(10,0);
-	printf("%d\n", r);
-	r = inserir(20,0);
-	printf("%d\n", r);
-	r = excluir(10,0);
-	printf("%d\n", r);
-	r = existe(10,0);
-	printf("%d\n", r);
-	r = criar();
-	printf("%d\n", r);
-	r = inserir(30,1);
-	printf("%d\n", r);
-	r = unir(0,1);
-	printf("%d\n", r);
-	listar(2);
-	fim();
 	return 0;
 }
 
