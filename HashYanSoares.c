@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 
 //struct dos elementos
 struct estruturaElemento{
@@ -39,7 +40,102 @@ void rehash(int set); //função responsável pelo rehash, quando atinge o fator
 void eliminaTodos(int set); //função que elimina todos os elementos de um conjunto, para facilitar a implementação do fim()
 
 int main(){
+	char c, valor1[10], valor2[10];
+	int i = 0, retorno;
 	inicializa();
+	for(;;){ //leitura de entrada:
+		c = getchar();
+		if(c == 'c'){
+			retorno = criar();
+			printf("%d\n", retorno);
+		}
+		if(c == 'f') fim();
+		if(c == 'i'){
+			while((c = getchar()) != '('){}
+			while((c = getchar()) != ','){
+				valor1[i] = c;
+				i++;
+			}
+			valor1[i] = '\0';
+			i=0;
+			while((c = getchar()) != ')'){
+				valor2[i] = c;
+				i++;
+			}
+			valor2[i] = '\0';
+			i=0;
+			retorno = inserir(atoi(valor1),atoi(valor2));
+			printf("%d\n", retorno);
+		}
+		if(c == 'u'){
+			while((c = getchar()) != '('){}
+			while((c = getchar()) != ','){
+				valor1[i] = c;
+				i++;
+			}
+			valor1[i] = '\0';
+			i=0;
+			while((c = getchar()) != ')'){
+				valor2[i] = c;
+				i++;
+			}
+			valor2[i] = '\0';
+			i=0;
+			retorno = unir(atoi(valor1),atoi(valor2));
+			printf("%d\n", retorno);
+		}
+		if(c == 'l'){
+			while((c = getchar()) != '('){}
+			while((c = getchar()) != ')'){
+				valor1[i] = c;
+				i++;
+			}
+			valor1[i] = '\0';
+			i=0;
+			listar(atoi(valor1));
+		}
+		if(c == 'e'){ //se for 'e', há a necessidade de testar se o terceiro char é 'i' ou 'c'
+			c = getchar();
+			if(c == 'x'){
+				c = getchar();
+				if(c == 'i'){
+					while((c = getchar()) != '('){}
+					while((c = getchar()) != ','){
+						valor1[i] = c;
+						i++;
+					}
+					valor1[i] = '\0';
+					i=0;
+					while((c = getchar()) != ')'){
+						valor2[i] = c;
+						i++;
+					}
+					valor2[i] = '\0';
+					i=0;
+					retorno = existe(atoi(valor1),atoi(valor2));
+					printf("%d\n", retorno);
+				}
+				if(c == 'c'){
+					while((c = getchar()) != '('){}
+					while((c = getchar()) != ','){
+						valor1[i] = c;
+						i++;
+					}
+					valor1[i] = '\0';
+					i=0;
+					while((c = getchar()) != ')'){
+						valor2[i] = c;
+						i++;
+					}
+					valor2[i] = '\0';
+					i=0;
+					retorno = excluir(atoi(valor1),atoi(valor2));
+					printf("%d\n", retorno);
+				}
+			}
+		}
+		while((c = getchar()) != '\n'){} //certifica que vai ir até o fim da entrada pra pegar a próxima
+	}
 	return 0;
 }
 
@@ -68,7 +164,9 @@ int criar(){ //aloca dinâmicamente cada conjunto (que tem tamanho inicial 50) -
 		contadorConjuntos++;
 		return contadorConjuntos-1; //numero referente a ID do conjunto que acaba de ser criado
 	}
-	else return -1;
+	else{
+		 return -1;
+	 }
 }
 
 int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento a ser inserido
@@ -76,7 +174,9 @@ int hash(int numero, int ncelulas){ //retorna o mod (função hash) do elemento 
 }
 
 int inserir(int element, int set){
-	if(existe(element, set) == 1) return 1; //não deve conter elementos repetidos e, ao fazer isso, não deve acusar erro (então retorna 1)
+	if(existe(element, set) == 1){
+		 return 1; //não deve conter elementos repetidos e, ao fazer isso, não deve acusar erro (então retorna 1)
+	 }
 	
 	if(set < contadorConjuntos){ //certifica que está tentando inserir num conjunto que já existe
 		int index, ncelulas;
@@ -101,7 +201,9 @@ int inserir(int element, int set){
 		return 1;
 	}
 	
-	else return -1; //caso o conjunto que se deseja inserir não exista
+	else{
+		 return -1; //caso o conjunto que se deseja inserir não exista
+	 }
 }
 
 int existe(int element, int set){
@@ -120,12 +222,14 @@ int existe(int element, int set){
 			return -1; //se percorrer toda lista e não achar o valor, retorna -1
 		}
 	}
-	else return -1; //conjunto a ser procurado não existe
+	else{
+		return -1; //conjunto a ser procurado não existe
+	}
 }
 
 int excluir(int element, int set){
 	if(set < contadorConjuntos){ //certifica que o conjunto do qual será eliminado o elemento existe
-		if(existe(element, set) == -1) return -1; //caso esteja tentando eliminar um elemento que não existe no conjunto
+		if((existe(element, set)) == -1) return -1; //caso esteja tentando eliminar um elemento que não existe no conjunto
 		else{ //caso realmente exista no conjunto:
 			int index, ncelulas;
 			elemento *ponteiro, *anterior;
@@ -143,14 +247,15 @@ int excluir(int element, int set){
 			return 1;
 		}
 	}
-	else return 1; //se o conjunto não existir, não deve retornar erro
+	else{
+		 return 1; //se o conjunto não existir, não deve retornar erro
+	 }
 }
 
 int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um novo conjunto, armazenar os elementos dos 2 conjuntos em um vetor e inserir eles no novo conjunto
 	elemento *ponteiro;
 	int *vetor;
 	int nelementos, cont=0, i, idconjunto;
-	
 	//calculo do numero de elementos
 	
 	nelementos = vetorControle[conjunto1].numeroElementos + vetorControle[conjunto2].numeroElementos;
@@ -186,7 +291,9 @@ int unir(int conjunto1, int conjunto2){ //no unir há a necessidade de criar um 
 }
 
 void listar(int set){
-	if(vetorControle[set].numeroElementos == 0) return;
+	if(vetorControle[set].numeroElementos == 0){
+		 return;
+	 }
 	int i, cont=0, nelementos;
 	elemento* ponteiro;
 	int *vetor; //cria um vetor de inteiros alocado dinâmicamente com o número de elementos do conjunto (será passado para uma função de ordenação)
